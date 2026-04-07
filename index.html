@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>🕵️ 時空特務：攔截怪盜X</title>
+    <style>
+        :root { 
+            --bg-color: #0a0a0a; 
+            --panel-bg: #161616; 
+            --accent: #00ff41; 
+            --user-accent: #00b4ff; 
+            --text-main: #e0e0e0; 
+            --status-bg: #333;
+        }
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; margin: 0; padding: 20px; }
+        .container { width: 100%; max-width: 700px; background: var(--panel-bg); padding: 30px; border-radius: 15px; border: 1px solid #333; box-shadow: 0 15px 50px rgba(0,0,0,0.8); margin-top: 20px; }
+        .page { display: none; animation: fadeIn 0.5s; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .header-title { color: var(--accent); text-align: center; text-shadow: 0 0 10px var(--accent); font-size: 2.2em; margin-bottom: 20px; }
+        .box-content { background: #222; padding: 20px; border-radius: 8px; border-left: 6px solid var(--accent); line-height: 1.8; margin-bottom: 30px; }
+        .btn-action { display: block; width: 260px; margin: 0 auto; padding: 15px; background: #008f11; color: white; border: none; border-radius: 30px; font-size: 1.2em; cursor: pointer; font-weight: bold; transition: 0.3s; text-align: center; }
+        .btn-action:hover { background: var(--accent); box-shadow: 0 0 20px var(--accent); transform: scale(1.05); }
+        #display { height: 450px; overflow-y: auto; border: 1px solid #333; padding: 15px; margin-bottom: 20px; background: #000; border-radius: 10px; display: flex; flex-direction: column; }
+        .status-msg { background: var(--status-bg); color: #aaa; padding: 8px 15px; border-radius: 5px; font-size: 0.85em; margin: 10px 0; text-align: center; letter-spacing: 1px; }
+        .ai-msg { align-self: flex-start; background: #132a1e; color: #a5ffd1; padding: 12px 16px; border-radius: 15px 15px 15px 0; margin: 10px 0; max-width: 85%; border: 1px solid #244b35; line-height: 1.5; }
+        .ai-msg b { color: #fff; display: block; margin-bottom: 5px; }
+        .user-msg { align-self: flex-end; background: #0d2842; color: #94e3ff; padding: 12px 16px; border-radius: 15px 15px 0 15px; margin: 10px 0; max-width: 80%; text-align: right; border: 1px solid #1c4a75; }
+        .input-bar { display: flex; gap: 10px; }
+        input { flex-grow: 1; padding: 14px; background: #111; border: 2px solid #333; color: #fff; border-radius: 8px; font-size: 1em; }
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #111; font-size: 0.95em; }
+        .report-table th, .report-table td { border: 1px solid #333; padding: 12px; text-align: left; }
+        .report-table th { color: var(--accent); background: #222; }
+        .record-wrong { color: #ff5f5f; text-decoration: line-through; margin-right: 8px; font-size: 0.85em; }
+        .record-correct { color: var(--accent); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="introPage" class="container page active">
+    <h1 class="header-title">🕵️ 時空特務：攔截怪盜X</h1>
+    <div class="box-content">
+        <h3>【任務機密簡報】</h3>
+        <p>🔴 <b>目標人物：</b> 怪盜X (擅長利用時間差與交通工具逃亡)。</p>
+        <p>🔵 <b>特務能力：</b> 運用小四數學「時間與分秒運算」進行攔截定位。</p>
+        <p>🟢 <b>作戰方式：</b> 根據怪盜發出的訊息，精確計算出時間點或經過時間。</p>
+        <p>⚠️ <b>注意：</b> 格式請務必遵照示範，如 <b>12:23</b>，否則信號會中斷！</p>
+    </div>
+    <button class="btn-action" onclick="startGame()">接收指令，任務開始！</button>
+</div>
+
+<div id="gamePage" class="container page">
+    <div id="display"></div>
+    <div class="input-bar">
+        <input type="text" id="userInput" placeholder="在此輸入答案..." autocomplete="off" onkeypress="handleKeyPress(event)">
+        <button class="btn-action" style="width: auto; padding: 0 25px;" onclick="processInput()">執行</button>
+    </div>
+</div>
+
+<div id="resultPage" class="container page">
+    <h1 class="header-title">📊 任務達成報告書</h1>
+    <table class="report-table">
+        <thead>
+            <tr><th style="width: 20%;">關卡</th><th style="width: 60%;">攔截紀錄</th><th style="width: 20%;">最終解碼</th></tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+    </table>
+    <br>
+    <button class="btn-action" onclick="location.reload()">重新執行任務</button>
+</div>
+
+<script>
+    const questionBank = [
+        // 第一關：時間加法
+        [
+            { s: "嘿特務，我剛在 10:30 溜上飛機了，這飛機要飛 2 小時 45 分鐘。你該不會忘了算我幾點降落吧？", a: "13:15", hint: "12:23", tip: "聽好了，10時加2時是12時，30加45是75分。滿60分要進位！格式要像 12:23 這樣寫喔！" },
+            { s: "算準一點！我 08:20 起飛，飛行 1 小時 50 分鐘。如果你遲到，我的隱身斗篷就會啟動！", a: "10:10", hint: "12:23", tip: "20加50是70分，把那60分換成1小時。寫法注意，要是冒號格式如 12:23！" },
+            { s: "11:45 出發，要飛 3 小時 20 分鐘。抓得到我嗎？還是只能看著我的機尾燈？", a: "15:05", hint: "12:23", tip: "你的數學老師在哭泣喔！11加3是14，45加20是65。動動腦，65分換成小時後，格式寫成 12:23 明白嗎？" },
+            { s: "09:15 我就跑了，飛了 4 小時 55 分鐘。如果你算錯，勳章該繳回來了。", a: "14:10", hint: "12:23", tip: "9加4是13，15加55是70。70分就是1小時10分。快輸入 12:23 這種格式的答案！" },
+            { s: "下午茶時間 14:50 我換了快艇，要開 2 小時 15 分鐘。你還在後頭慢慢追嗎？", a: "17:05", hint: "12:23", tip: "50加15是65分，已經超過一小時了！進位後寫成 12:23 的樣子，別讓我等太久！" },
+            { s: "我 07:35 起飛，飛 5 小時 30 分鐘。你睡醒了嗎？", a: "13:05", hint: "12:23", tip: "還在揉眼睛嗎？7加5是12，35加30是65。處理一下進位，答案格式要是 12:23！" },
+            { s: "跨年之戰！我 22:10 起飛，要飛 3 小時 50 分鐘。別算到明年去喔！", a: "02:00", hint: "12:23", tip: "22加3是25時，也就是凌晨1點。加進位後，格式寫成 12:23 這種寫法！" },
+            { s: "13:40 離開，飛 1 小時 25 分鐘。這題夠簡單吧？", a: "15:05", hint: "12:23", tip: "別讓我失望啊特務！40加25是65分，進位後是多少？寫成 12:23 的冒號格式給我！" },
+            { s: "06:55 天還沒亮我就出發了，飛 2 小時 10 分鐘。", a: "09:05", hint: "12:23", tip: "55加10是65分，進位後是9時幾分？寫法示範：12:23，別再寫錯啦！" },
+            { s: "16:25 起飛，飛 3 小時 45 分鐘。你還在原地踏步呢！", a: "20:10", hint: "12:23", tip: "16加3是19，25加45是70。進位、冒號、12:23 格式！懂了嗎？" }
+        ],
+        // 第二關：經過時間
+        [
+            { s: "我 15:20 潛入，17:40 離開。算不出來我待了多久，就別當我的對手！", a: "2小時20分鐘", hint: "幾小時幾分鐘", tip: "這種直接減法你也能錯？用17:40減去15:20。寫『X小時X分鐘』就對了！" },
+            { s: "早上 09:10 進入，11:30 撤離。這時間夠我喝杯茶了，你說呢？", a: "2小時20分鐘", hint: "幾小時幾分鐘", tip: "11減9是幾小時？30減10是幾分鐘？寫成『2小時20分鐘』，你是被我嚇傻了嗎？" },
+            { s: "14:45 進去，16:15 出來。動作太快了嗎？算得出這段時間嗎？", a: "1小時30分鐘", hint: "幾小時幾分鐘", tip: "喔呀？15分不夠減45分對吧？去跟小時借60分啊！寫成『X小時X分鐘』！" },
+            { s: "10:20 潛入，下午 1:00 才離開。算出多久了嗎？", a: "2小時40分鐘", hint: "幾小時幾分鐘", tip: "下午1:00就是13:00。用13:00減10:20，記得要借位喔，小特務。" },
+            { s: "08:50 鑽進去，12:10 爬出來。你發現我待了多久嗎？", a: "3小時20分鐘", hint: "幾小時幾分鐘", tip: "借位減法！12:10的10分不夠減，借1小時變70分減50分。寫『X小時X分鐘』！" },
+            { s: "19:30 進入，21:15 閃人。這貓捉老鼠進行了多久？", a: "1小時45分鐘", hint: "幾小時幾分鐘", tip: "借位！15分減不掉30分，借1小時過來變75分再減。格式是『X小時X分鐘』！" },
+            { s: "13:05 潛入，15:00 離開。監視器有拍到我待多久嗎？", a: "1小時55分鐘", hint: "幾小時幾分鐘", tip: "15:00看成14:60，減去13:05。寫出『X小時X分鐘』來挑戰我啊！" },
+            { s: "11:40 進入，14:20 離開。時間是多久？", a: "2小時40分鐘", hint: "幾小時幾分鐘", tip: "14:20減11:40。20分借位變80減40。快點寫成『X小時X分鐘』！" },
+            { s: "07:15 進入，10:05 離開。頭腦清醒了嗎？", a: "2小時50分鐘", hint: "幾小時幾分鐘", tip: "10:05借位變09:65，減去07:15。快輸入『X小時X分鐘』！" },
+            { s: "20:45 進入，23:20 離開。算得出我在黑暗中多久嗎？", a: "2小時35分鐘", hint: "幾小時幾分鐘", tip: "23:20借位變22:80，減去20:45。寫『X小時X分鐘』，別讓我等！" }
+        ],
+        // 第三關：分秒減法
+        [
+            { s: "倒數 10 分 10 秒，我縮短了 4 分 30 秒。特務，手心冒汗了嗎？", a: "5分40秒", hint: "幾分幾秒", tip: "滴答滴答！10秒減不掉30秒，快去跟分鐘借1分換成60秒來湊。寫『X分X秒』！" },
+            { s: "剩 8 分 20 秒，但我加速 3 分 50 秒。剪錯線就拜拜囉！", a: "4分30秒", hint: "幾分幾秒", tip: "手別抖！借1分後變7分80秒減3分50秒。寫『X分X秒』，再算錯就蹦一聲囉！" },
+            { s: "15 分 05 秒，加速 6 分 15 秒。這道題很難捉摸吧？", a: "8分50秒", hint: "幾分幾秒", tip: "借位！14分65秒減掉6分15秒。格式是『X分X秒』，快點！" },
+            { s: "原本還有 12 分整，但我加速了 5 分 45 秒。有膽量解開它嗎？", a: "6分15秒", hint: "幾分幾秒", tip: "12分就是11分60秒，減5分45秒。答案要寫『X分X秒』！" },
+            { s: "7 分 15 秒，加速 2 分 40 秒。滴答滴答...還在發呆嗎？", a: "4分35秒", hint: "幾分幾秒", tip: "看來你很喜歡借位？6分75秒減去2分40秒。趕快輸入『X分X秒』救你自己！" },
+            { s: "20 分 10 秒，加速 10 分 55 秒。這發明你解得開嗎？", a: "9分15秒", hint: "幾分幾秒", tip: "19分70秒減10分55秒。答案寫『X分X秒』，這很難嗎？" },
+            { s: "剩 5 分 30 秒，我再加速 1 分 45 秒。心跳變快了嗎？", a: "3分45秒", hint: "幾分幾秒", tip: "心跳快沒用，腦袋要轉快點！4分90秒減1分45秒。寫成『X分X秒』！" },
+            { s: "11 分 05 秒，加速 4 分 10 秒。算不出來寶藏我就帶走囉！", a: "6分55秒", hint: "幾分幾秒", tip: "10分65秒減去4分10秒。寫成『X分X秒』給我看！" },
+            { s: "9 分 25 秒，加速 3 分 40 秒。耐心快用完了。", a: "5分45秒", hint: "幾分幾秒", tip: "8分85秒減3分40秒。輸入『X分X秒』。特務總部沒人了嗎？" },
+            { s: "13 分 15 秒，加速 7 分 50 秒。最後一份禮物，接招吧！", a: "5分25秒", hint: "幾分幾秒", tip: "12分75秒減去7分50秒。輸入『X分X秒』答對，我就承認你聰明。" }
+        ]
+    ];
+
+    let currentStep = 0, selectedLevels = [], allRecords = [];
+
+    function startGame() {
+        selectedLevels = questionBank.map(group => group[Math.floor(Math.random() * group.length)]);
+        showPage('gamePage');
+        initLevel();
+    }
+
+    function initLevel() {
+        const lv = selectedLevels[currentStep];
+        const titles = ["📡 怪盜X 已起飛！", "🔐 偵測到非法入侵！", "💣 定時炸彈已啟動！"];
+        logStatus(titles[currentStep]);
+        setTimeout(() => logAI(lv.s, lv.hint), 600);
+    }
+
+    function logStatus(txt) {
+        const d = document.getElementById('display');
+        d.innerHTML += `<div class="status-msg">${txt}</div>`;
+        d.scrollTop = d.scrollHeight;
+    }
+
+    function logAI(txt, hint) {
+        const d = document.getElementById('display');
+        d.innerHTML += `<div class="ai-msg"><b>👤 怪盜X</b>${txt}<br><small style="color:#666">格式示範：${hint}</small></div>`;
+        d.scrollTop = d.scrollHeight;
+    }
+
+    function logUser(txt) {
+        const d = document.getElementById('display');
+        d.innerHTML += `<div class="user-msg"><b>📡 指揮官</b><br>${txt}</div>`;
+        d.scrollTop = d.scrollHeight;
+    }
+
+    function processInput() {
+        const input = document.getElementById('userInput');
+        const val = input.value.trim();
+        if(!val) return;
+        logUser(val);
+        if(!allRecords[currentStep]) allRecords[currentStep] = [];
+        allRecords[currentStep].push(val);
+
+        if(val === selectedLevels[currentStep].a) {
+            currentStep++;
+            input.value = "";
+            if(currentStep < selectedLevels.length) {
+                setTimeout(() => {
+                    logStatus("✅ 攔截正確！移動至下一目標...");
+                    setTimeout(initLevel, 800);
+                }, 400);
+            } else {
+                setTimeout(showResult, 800);
+            }
+        } else {
+            input.value = "";
+            setTimeout(() => {
+                logStatus("❌ 解析失敗...");
+                setTimeout(() => logAI(selectedLevels[currentStep].tip, selectedLevels[currentStep].hint), 400);
+            }, 400);
+        }
+    }
+
+    function showResult() {
+        showPage('resultPage');
+        const tbody = document.getElementById('resultBody');
+        selectedLevels.forEach((lv, i) => {
+            let rec = "";
+            (allRecords[i] || []).forEach(ans => {
+                rec += ans === lv.a ? `<span class="record-correct">${ans} (✅)</span>` : `<span class="record-wrong">${ans}</span>`;
+            });
+            tbody.innerHTML += `<tr><td>關卡 ${i+1}</td><td>${rec}</td><td><b>${lv.a}</b></td></tr>`;
+        });
+    }
+
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+    function handleKeyPress(e) { if(e.key === 'Enter') processInput(); }
+</script>
+</body>
+</html>
